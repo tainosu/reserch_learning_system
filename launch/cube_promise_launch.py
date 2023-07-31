@@ -1,0 +1,66 @@
+from launch_ros.actions import Node
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+
+
+def generate_launch_description():
+    return LaunchDescription([
+        # DeclareLaunchArgument(
+        #     'source',
+        #     default_value='wheat_ver2.json',
+        #     description='話題として使うjsonファイルの名前'
+        # ),
+        DeclareLaunchArgument(
+            'assign_cube',
+            default_value='def/white',
+            description='使用するPoKeBo Cubeのtypeとcolor'
+        ),
+        # Node(
+        #     package='pokebo_cube',
+        #     executable='server',
+        #     name='server',
+        #     parameters=[{
+        #                 'source': 'wheat_ver2.json',
+        #                 }],
+        #     output='screen',
+        #     # arguments=['--ros-args', '--log-level', 'debug'],
+        # ),
+        Node(
+            package='pokebo_cube',
+            executable='cube_core',
+            name='poke_blue',
+            parameters=[{
+                        'assign_cube': 'promise/blue',
+                        }],
+            output='screen',
+            # arguments=['--ros-args', '--log-level', 'debug'],
+        ),
+        Node(
+            package='pokebo_cube',
+            executable='cube_core',
+            name='poke_yellow',
+            parameters=[{
+                        'assign_cube': 'promise/yellow',
+                        }],
+            output='screen',
+            # arguments=['--ros-args', '--log-level', 'debug'],
+        ),
+        Node(
+            package='pokebo_cube',
+            executable='cube_core',
+            name='poke_green',
+            parameters=[{
+                        'assign_cube': 'promise/green',
+                        }],
+            output='screen',
+            # arguments=['--ros-args', '--log-level', 'debug'],
+        ),
+        Node(
+            package='pokebo_cube',
+            executable='utterance_core',
+            name='utterance_core',
+            output='screen',
+        ),
+    ])
