@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             'cube_core = pokebo_cube.cube_core:main',
             'utterance_core = pokebo_cube.utterance_core:main',
+            'human_input = pokebo_cube.human_input:main',
         ],
     },
 )
