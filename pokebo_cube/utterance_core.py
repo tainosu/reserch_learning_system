@@ -9,6 +9,8 @@
 #ROS2
 import rclpy
 from rclpy.node import Node
+from rclpy.time import Duration
+from rclpy.clock import Clock, ClockType
 from std_msgs.msg import String
 
 #python
@@ -27,7 +29,7 @@ class UtteranceCore(Node):
         super().__init__('utterance_core')
         self.sentense = self.create_publisher(String, '/sentense', 1)
         self.state = self.create_publisher(String, '/state', 1)
-        self.create_subscription(String, "/input", self.callback_input, 10)
+        self.create_subscription(String, "/listen", self.callback_input, 1)
         timer_period = 3
         self.create_timer(timer_period, self.utterance_setup)
 
@@ -35,7 +37,11 @@ class UtteranceCore(Node):
         self.agent2 = "poke_green"
         self.agent3 = "poke_yellow"
         self.agent_list = [self.agent1, self.agent2, self.agent3]
-        self.human_text = ""
+        self.human_text = "名古屋市"
+    
+    def callback_input(self, msg):
+        self.human_text = msg.data
+        console.log(f"callback => human_text:{self.human_text}")
 
     def utterance_setup(self):
         w = Wizavo(wavname="shakai_4")
@@ -48,7 +54,12 @@ class UtteranceCore(Node):
             self.text_list = f.readlines()
 
         #ゴリ押し
-        time.sleep(3)
+        # time.sleep(3)
+        self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=3)
+        while(1):
+            if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                console.log(f"最初のクロックぬけた")
+                break
 
         #utterance_core正常動作確認
         title = self.text_list.pop(0)
@@ -60,7 +71,12 @@ class UtteranceCore(Node):
         msg = String()
         msg.data = 'ready'
         self.state.publish(msg)
-        time.sleep(4)
+        #time.sleep(4)
+        self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=3)
+        while(1):
+            if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                # console.log(f"最初のクロックぬけた")
+                break
 
         self.utterance_manager()
     
@@ -78,7 +94,12 @@ class UtteranceCore(Node):
 
                 leader = speaker
                 self.utterance_type = self.next_pattern()
-                time.sleep(4)
+                #time.sleep(4)
+                self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=3)
+                while(1):
+                    if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                        # console.log(f"最初のクロックぬけた")
+                        break
             else:
                 if self.utterance_type == "normal":
                     speaker = leader
@@ -88,7 +109,12 @@ class UtteranceCore(Node):
                     self.sentense.publish(msg)
 
                     self.utterance_type = self.next_pattern()
-                    time.sleep(4)
+                    # time.sleep(4)
+                    self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=3)
+                    while(1):
+                        if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                            # console.log(f"最初のクロックぬけた")
+                            break
                 elif self.utterance_type == "response":
                     speaker_list = [agent for agent in self.agent_list if agent != leader]
                     speaker = random.choice(speaker_list)
@@ -98,7 +124,12 @@ class UtteranceCore(Node):
                     self.sentense.publish(msg)
 
                     self.utterance_type = self.next_pattern()
-                    time.sleep(4)
+                    #time.sleep(4)
+                    self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=3)
+                    while(1):
+                        if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                            # console.log(f"最初のクロックぬけた")
+                            break
                 elif self.utterance_type == "filler":
                     speaker = leader
                     text = self.text_list.pop(0).split(",")[0]
@@ -107,7 +138,12 @@ class UtteranceCore(Node):
                     self.sentense.publish(msg)
 
                     self.utterance_type = self.next_pattern()
-                    time.sleep(4)
+                    # time.sleep(4)
+                    self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=3)
+                    while(1):
+                        if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                            # console.log(f"最初のクロックぬけた")
+                            break
                 elif self.utterance_type == "back_channeling":
                     speaker_list = [agent for agent in self.agent_list if agent != leader]
                     speaker = random.choice(speaker_list)
@@ -118,7 +154,12 @@ class UtteranceCore(Node):
 
                     leader = speaker
                     self.utterance_type = self.next_pattern()
-                    time.sleep(6)
+                    # time.sleep(6)
+                    self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6)
+                    while(1):
+                        if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                            # console.log(f"最初のクロックぬけた")
+                            break
 
                 elif self.utterance_type == "forget":
                     speaker = leader
@@ -132,7 +173,12 @@ class UtteranceCore(Node):
                     msg = String()
                     msg.data = f"{speaker}:{text}"
                     self.sentense.publish(msg)
-                    time.sleep(8)
+                    # time.sleep(8)
+                    self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=8)
+                    while(1):
+                        if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                            # console.log(f"最初のクロックぬけた")
+                            break
                     self.omoidasita = False
                     for i in range(2):
                         console.log(f"human_text:{self.human_text}")
@@ -146,7 +192,12 @@ class UtteranceCore(Node):
                             self.sentense.publish(msg)
                             self.utterance_type = self.next_pattern()
                             self.omoidasita = True
-                            time.sleep(6)
+                            # time.sleep(6)
+                            self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6)
+                            while(1):
+                                if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                                    # console.log(f"最初のクロックぬけた")
+                                    break
                             break
                         else:
                             speaker_list = [agent for agent in self.agent_list if agent != leader]
@@ -157,7 +208,12 @@ class UtteranceCore(Node):
                             msg = String()
                             msg.data = f"{speaker}:{text}"
                             self.sentense.publish(msg)
-                            time.sleep(6)
+                            # time.sleep(6)
+                            self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6)
+                            while(1):
+                                if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                                    # console.log(f"最初のクロックぬけた")
+                                    break
                     if not self.omoidasita:
                         speaker = leader
                         text = f"思い出した!、{self.text_list.pop(0)}"
@@ -165,8 +221,12 @@ class UtteranceCore(Node):
                         msg.data = f"{speaker}:{text}"
                         self.sentense.publish(msg)
                         self.utterance_type = self.next_pattern()
-                        time.sleep(6)
-
+                        # time.sleep(6)
+                        self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6)
+                        while(1):
+                            if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                                # console.log(f"最初のクロックぬけた")
+                                break
 
 
 
@@ -194,9 +254,7 @@ class UtteranceCore(Node):
             next = "back_channeling"
         return next
     
-    def callback_input(self, msg):
-        self.human_text = msg.data
-        console.log(f"callback => human_text:{self.human_text}")
+    
 
 
         

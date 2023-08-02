@@ -21,12 +21,12 @@ class HumanInput(Node):
         super().__init__('human_input')
         self.input = ""
         self.pub_input = self.create_publisher(String, "/input", 10)
-        self.create_subscription(String, "/listen", self.callback_listen, 10)
+        self.create_subscription(String, "/listen", self.callback_listen, 1)
         self.create_subscription(String, "/pokebo_cube/speak", self.callback_speak, 2)
     
     def callback_listen(self, msg):
-        console.log(msg.data)
         self.input = msg.data
+        console.log(f"subscribe!:{self.input}")
 
     def callback_speak(self, msg):
         data = msg.data.split(":")
@@ -37,6 +37,7 @@ class HumanInput(Node):
         else:
             msg = String()
             msg.data = self.input
+            console.log(f"hogehogehogehoge:{msg.data}")
             self.pub_input.publish(msg)
 
 def main(args=None):
