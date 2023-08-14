@@ -26,18 +26,14 @@ class HumanInput(Node):
     
     def callback_listen(self, msg):
         self.input = msg.data
-        console.log(f"subscribe!:{self.input}")
+        # console.log(f"subscribe!:{self.input}")
 
     def callback_speak(self, msg):
-        data = msg.data.split(":")
-        state = data[1]
-
-        if state == "start":
-            return
-        else:
+        state = msg.data.split(":")[1]
+        if state == "end":
             msg = String()
             msg.data = self.input
-            console.log(f"hogehogehogehoge:{msg.data}")
+            # console.log(f"publish!:{msg.data}")
             self.pub_input.publish(msg)
 
 def main(args=None):

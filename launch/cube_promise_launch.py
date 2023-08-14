@@ -63,10 +63,10 @@ def generate_launch_description():
             name='utterance_core',
             output='screen',
         ),
-        # Node(
-        #     package='pokebo_cube',
-        #     executable='human_input',
-        #     name='human_input',
-        #     output='screen',
-        # ),
+        Node(
+            package='pokebo_cube',
+            executable='human_input',
+            name='human_input',
+            output='screen',
+        ),
     ])
