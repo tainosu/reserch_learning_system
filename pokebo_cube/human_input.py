@@ -30,7 +30,7 @@ class HumanInput(Node):
 
     def callback_speak(self, msg):
         state = msg.data.split(":")[1]
-        if state == "end":
+        if state == "start":
             msg = String()
             msg.data = self.input
             # console.log(f"publish!:{msg.data}")

@@ -64,7 +64,7 @@ class Cube(Node):
         text = data[1]
         # console.log(f"name:{name}, text:{text}")
         if self.name == name:
-            com = "default"
+            com = "up"
             msg = String()
             msg.data = com
             self.behavior.publish(msg)
@@ -101,12 +101,6 @@ class Cube(Node):
             msg = String()
             msg.data = com
             self.behavior.publish(msg)
-        
-
-
-
-
-
 
 
 def main(args=None):
