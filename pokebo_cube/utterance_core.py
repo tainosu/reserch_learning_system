@@ -45,7 +45,6 @@ class UtteranceCore(Node):
         self.leader = self.agent1
         self.speaker = self.agent1
         self.answer_list = []
-
         self.wizavo = Wizavo(wavname="shakai_4")
 
         #テキストファイル読み込み
@@ -54,6 +53,9 @@ class UtteranceCore(Node):
         text_path = text_path[1]
         with open(text_path) as f:
             self.text_list = f.readlines()
+        self.line_num = 0   #現在の行数
+        self.text_num = len(self.text_list) #テキストの行数
+
         #cube起動待ち
         self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=3.5)
         while(1):
@@ -66,7 +68,6 @@ class UtteranceCore(Node):
         utt = f"今からね、{title}、話すよ"
         wav = self.wizavo.create_wavfile(utt)
         self.wizavo.speak(wav)
-
         msg = String()
         msg.data = 'ready'
         self.state.publish(msg)
@@ -81,13 +82,16 @@ class UtteranceCore(Node):
         self.human_text = msg.data
         console.log(f"callback => human_text:{self.human_text}")
     
-    #utterance_typeを管理する
+    #utterance_typeを管理
     def next_pattern(self):
-        if len(self.text_list) == 0:
-            next = "none"
-            return
+        #テキストの末尾までたどり着いた場合
+        if self.line_num == self.text_num - 1:
+            next = "normal"
+            self.head_flag = True
+            self.line_num = 0
+            return next
         
-        text = self.text_list[0]
+        text = self.text_list[self.line_num]
         if "[masked]" in text:
             next = "forget"
         elif text[-2] == '.':
@@ -104,11 +108,13 @@ class UtteranceCore(Node):
             next = "back_channeling"
         return next
     
+    #テキストを一行読み取り、発話するエージェントを決定
     def utterance_manager(self):
         if self.head_flag:
             #発話文の先頭行
             self.speaker = random.choice(self.agent_list)
-            text = self.text_list.pop(0).split(",")[0]
+            text = self.text_list[self.line_num].split(",")[0]
+            self.line_num += 1
             msg = String()
             msg.data = f"{self.speaker}:{text}"
             self.sentense.publish(msg)
@@ -119,7 +125,8 @@ class UtteranceCore(Node):
         else:
             if self.utterance_type == "normal":
                 self.speaker = self.leader
-                text = self.text_list.pop(0).split(",")[0]
+                text = self.text_list[self.line_num].split(",")[0]
+                self.line_num += 1
                 msg = String()
                 msg.data = f"{self.speaker}:{text}"
                 self.sentense.publish(msg)
@@ -128,7 +135,8 @@ class UtteranceCore(Node):
             elif self.utterance_type == "response":
                 speaker_list = [agent for agent in self.agent_list if agent != self.leader]
                 self.speaker = random.choice(speaker_list)
-                text = self.text_list.pop(0).split(",")[0]
+                text = self.text_list[self.line_num].split(",")[0]
+                self.line_num += 1
                 msg = String()
                 msg.data = f"{self.speaker}:{text}"
                 self.sentense.publish(msg)
@@ -136,7 +144,8 @@ class UtteranceCore(Node):
             
             elif self.utterance_type == "filler":
                 self.speaker = self.leader
-                text = self.text_list.pop(0).split(",")[0]
+                text = self.text_list[self.line_num].split(",")[0]
+                self.line_num += 1
                 msg = String()
                 msg.data = f"{self.speaker}:{text}"
                 self.sentense.publish(msg)
@@ -145,14 +154,15 @@ class UtteranceCore(Node):
             elif self.utterance_type == "back_channeling":
                 speaker_list = [agent for agent in self.agent_list if agent != self.leader]
                 self.speaker = random.choice(speaker_list)
-                text = self.text_list.pop(0).split(",")[0]
+                text = self.text_list[self.line_num].split(",")[0]
+                self.line_num += 1
                 msg = String()
                 msg.data = f"{self.speaker}:{text}"
                 self.sentense.publish(msg)
                 self.leader = self.speaker
                 self.utterance_type = self.next_pattern()
 
-                self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=4.5)
+                self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6)
                 while(1):
                     if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
                         break
@@ -163,9 +173,10 @@ class UtteranceCore(Node):
     def forget_mode(self):
         if self.forget_type == "first":
             self.speaker = self.leader
-            tmp = self.text_list.pop(0).split(",")
+            tmp = self.text_list[self.line_num].split(",")
+            self.line_num += 1
             text = random.choice(
-                ["えーと、あのー、", "うーんとね、", "あのー、そのー、"]
+                ["あのー、", "うーんとね、", "そのー、"]
             )
             text += tmp[1]
             self.answer_list = tmp[2].split(" ")
@@ -174,101 +185,72 @@ class UtteranceCore(Node):
             msg.data = f"{self.speaker}:{text}"
             self.sentense.publish(msg)
             self.forget_type = "second"
-            self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=4.5)
+            self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6.5)
             while(1):
                 if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
                     break
         
-        elif self.forget_type == "second":
+        elif self.forget_type == "second" or self.forget_type == "third" or self.forget_type == "forth":
             if self.human_text in self.answer_list:
+                self.speaker = self.leader
                 text = random.choice(
-                    ["そうだーそれそれー!", "それだ!"]
+                    ["それそれー!、", "それだ!、"]
                 )
-                text += self.text_list.pop(0)
+                text += self.text_list[self.line_num].split(",")[0]
+                self.line_num += 1
                 msg = String()
                 msg.data = f"{self.speaker}:{text}"
                 self.sentense.publish(msg)
                 self.forget_type = "first"
                 self.utterance_type = self.next_pattern()
-                self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=4.5)
-                while(1):
-                    if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
-                        break
         
             else:
-                speaker_list = [agent for agent in self.agent_list if agent != self.leader]
+                speaker_list = [agent for agent in self.agent_list if agent != self.speaker]
                 self.speaker = random.choice(speaker_list)
                 text = random.choice(
-                    ["なんだっけ?", "うーんとー、"]
+                    ["なんだっけ?", "なんだっけ?", "うーんとー", "うーんとー", "思い出せないなあ"]
                 )
                 msg = String()
                 msg.data = f"{self.speaker}:{text}"
                 self.sentense.publish(msg)
-                self.forget_type = "third"
-        
-        elif self.forget_type == "third":
-            if self.human_text in self.answer_list:
-                text = random.choice(
-                    ["そうだーそれそれー!", "それだ!"]
-                )
-                text += self.text_list.pop(0)
-                msg = String()
-                msg.data = f"{self.speaker}:{text}"
-                self.sentense.publish(msg)
-                self.forget_type = "first"
-                self.utterance_type = self.next_pattern()
-                self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=4.5)
-                while(1):
-                    if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
-                        break
-        
-            else:
-                speaker_list = [agent for agent in self.agent_list if agent != self.leader]
-                self.speaker = random.choice(speaker_list)
-                text = random.choice(
-                    ["なんだっけ?", "うーんとー、"]
-                )
-                msg = String()
-                msg.data = f"{self.speaker}:{text}"
-                self.sentense.publish(msg)
-                self.forget_type = "forth"
 
-        elif self.forget_type == "forth":
-            if self.human_text in self.answer_list:
-                text = random.choice(
-                    ["そうだーそれそれー!", "それだ!"]
-                )
-                text += self.text_list.pop(0)
-                msg = String()
-                msg.data = f"{self.speaker}:{text}"
-                self.sentense.publish(msg)
-                self.forget_type = "first"
-                self.utterance_type = self.next_pattern()
-                self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=4.5)
-                while(1):
-                    if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
-                        break
-        
-            else:
-                speaker_list = [agent for agent in self.agent_list if agent != self.leader]
-                self.speaker = random.choice(speaker_list)
-                text = random.choice(
-                    ["思い出せないなあ"]
-                )
-                msg = String()
-                msg.data = f"{self.speaker}:{text}"
-                self.sentense.publish(msg)
-                self.forget_type = "fifth"
+                if self.forget_type == "second":
+                    self.forget_type = "third"
+                elif self.forget_type == "third":
+                    self.forget_type = "forth"
+                elif self.forget_type == "forth":
+                    self.forget_type = "fifth"
+                
+            self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6.5)
+            while(1):
+                if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
+                    break
         
         elif self.forget_type == "fifth":
-            self.speaker = self.leader
-            text = f"思い出した!、{self.text_list.pop(0)}"
-            msg = String()
-            msg.data = f"{self.speaker}:{text}"
-            self.sentense.publish(msg)
-            self.forget_type = "first"
-            self.utterance_type = self.next_pattern()
-            self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=4.5)
+            if self.human_text in self.answer_list:
+                self.speaker = self.leader
+                text = random.choice(
+                    ["それそれー!、", "それだ!、"]
+                )
+                text += self.text_list[self.line_num].split(",")[0]
+                self.line_num += 1
+                msg = String()
+                msg.data = f"{self.speaker}:{text}"
+                self.sentense.publish(msg)
+                self.forget_type = "first"
+                self.utterance_type = self.next_pattern()
+        
+            else:
+                self.speaker = self.leader
+                text = f"思い出した!、{self.text_list[self.line_num]}"
+                self.line_num += 1
+                msg = String()
+                msg.data = f"{self.speaker}:{text}"
+                self.sentense.publish(msg)
+                self.forget_type = "first"
+                self.utterance_type = self.next_pattern()
+
+            self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6.5)
             while(1):
                 if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
                     break
