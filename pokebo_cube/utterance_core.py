@@ -194,7 +194,7 @@ class UtteranceCore(Node):
             if self.human_text in self.answer_list:
                 self.speaker = self.leader
                 text = random.choice(
-                    ["それそれー!、", "それだ!、"]
+                    ["それそれー!、", "それだ!、", "そうだったー!"]
                 )
                 text += self.text_list[self.line_num].split(",")[0]
                 self.line_num += 1
@@ -230,7 +230,7 @@ class UtteranceCore(Node):
             if self.human_text in self.answer_list:
                 self.speaker = self.leader
                 text = random.choice(
-                    ["それそれー!、", "それだ!、"]
+                    ["それそれー!、", "それだ!、", "そうだったー!"]
                 )
                 text += self.text_list[self.line_num].split(",")[0]
                 self.line_num += 1
