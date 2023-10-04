@@ -17,16 +17,6 @@ def generate_launch_description():
             default_value='def/white',
             description='使用するPoKeBo Cubeのtypeとcolor'
         ),
-        # Node(
-        #     package='pokebo_cube',
-        #     executable='server',
-        #     name='server',
-        #     parameters=[{
-        #                 'source': 'wheat_ver2.json',
-        #                 }],
-        #     output='screen',
-        #     # arguments=['--ros-args', '--log-level', 'debug'],
-        # ),
         Node(
             package='pokebo_cube',
             executable='cube_core',
