@@ -3,7 +3,7 @@
 # File              : cube_core.py
 # Author            : Taichi Sekikawa <sekikawa.taichi.vf@tut.jp>
 # Date              : 2023 07/29
-# Last Modified Date: 2023 07/29
+# Last Modified Date: 2023 10/10
 # Last Modified By  : Taichi Sekikawa <sekikawa.taichi.vf@tut.jp>
 
 #ROS2
@@ -22,19 +22,13 @@ class HumanInput(Node):
         self.input = ""
         self.pub_input = self.create_publisher(String, "/input", 10)
         self.create_subscription(String, "/listen", self.callback_listen, 1)
-        self.create_subscription(String, "/pokebo_cube/speak", self.callback_speak, 2)
     
     def callback_listen(self, msg):
         self.input = msg.data
-        # console.log(f"subscribe!:{self.input}")
-
-    def callback_speak(self, msg):
-        state = msg.data.split(":")[1]
-        if state == "start":
-            msg = String()
-            msg.data = self.input
-            # console.log(f"publish!:{msg.data}")
-            self.pub_input.publish(msg)
+        console.log(f"subscribe!---->{self.input}")
+        msg = String()
+        msg.data = self.input
+        self.pub_input.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)

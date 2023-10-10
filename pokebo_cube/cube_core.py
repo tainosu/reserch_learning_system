@@ -3,7 +3,7 @@
 # File              : cube_core.py
 # Author            : Taichi Sekikawa <sekikawa.taichi.vf@tut.jp>
 # Date              : 2023 07/29
-# Last Modified Date: 2023 07/29
+# Last Modified Date: 2023 10/10
 # Last Modified By  : Taichi Sekikawa <sekikawa.taichi.vf@tut.jp>
 
 #ROS2
@@ -63,6 +63,7 @@ class Cube(Node):
         name = data[0]
         text = data[1]
         # console.log(f"name:{name}, text:{text}")
+
         if self.name == name:
             com = "up"
             msg = String()

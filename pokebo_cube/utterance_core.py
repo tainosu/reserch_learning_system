@@ -3,15 +3,14 @@
 # File              : cube_core.py
 # Author            : Taichi Sekikawa <sekikawa.taichi.vf@tut.jp>
 # Date              : 2023 07/29
-# Last Modified Date: 2023 07/29
+# Last Modified Date: 2023 10/10
 # Last Modified By  : Taichi Sekikawa <sekikawa.taichi.vf@tut.jp>
 
 #ROS2
 import rclpy
 from rclpy.node import Node
-from rclpy.time import Duration
-from rclpy.clock import Clock, ClockType
 from std_msgs.msg import String
+import time
 
 #python
 from rich.console import Console
@@ -48,7 +47,7 @@ class UtteranceCore(Node):
         self.wizavo = Wizavo(wavname="shakai_4")
 
         #テキストファイル読み込み
-        filedir_path = os.environ["HOME"] + "/his_ws/src/pokebo_cube/textfile/*"
+        filedir_path = os.environ["HOME"] + "/chi_ws/src/pokebo_cube/textfile/*"
         text_path = glob.glob(filedir_path)
         text_path = text_path[1]
         with open(text_path) as f:
@@ -57,11 +56,8 @@ class UtteranceCore(Node):
         self.text_num = len(self.text_list) #テキストの行数
 
         #cube起動待ち
-        self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=3.5)
-        while(1):
-            if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
-                break
-        
+        time.sleep(3.5)
+
         #utterance_core正常起動確認
         title = self.text_list.pop(0)
         title = title.split(" ")[0]
@@ -72,10 +68,8 @@ class UtteranceCore(Node):
         msg.data = 'ready'
         self.state.publish(msg)
         #wizavo出力待ち
-        self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=3.5)
-        while(1):
-            if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
-                break
+        time.sleep(2)
+    
     
     #cubeが話し終わったタイミングで人の発話を受け取る
     def callback_input(self, msg):
@@ -162,10 +156,7 @@ class UtteranceCore(Node):
                 self.leader = self.speaker
                 self.utterance_type = self.next_pattern()
 
-                self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6)
-                while(1):
-                    if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
-                        break
+                #time.sleep(6)
             
             elif self.utterance_type == "forget":
                 self.forget_mode()
@@ -175,26 +166,23 @@ class UtteranceCore(Node):
             self.speaker = self.leader
             tmp = self.text_list[self.line_num].split(",")
             self.line_num += 1
-            text = random.choice(
-                ["あのー、", "うーんとね、", "そのー、"]
-            )
-            text += tmp[1]
+            text = tmp[1]
             self.answer_list = tmp[2].split(" ")
             console.log(self.answer_list)
             msg = String()
             msg.data = f"{self.speaker}:{text}"
             self.sentense.publish(msg)
             self.forget_type = "second"
-            self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6.5)
-            while(1):
-                if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
-                    break
+
+            #time.sleep(8.5)
+          
         
         elif self.forget_type == "second" or self.forget_type == "third" or self.forget_type == "forth":
+            time.sleep(1)
             if self.human_text in self.answer_list:
                 self.speaker = self.leader
                 text = random.choice(
-                    ["それそれー!、", "それだ!、", "そうだったー!"]
+                    ["それそれー!、", "それだ!、", "そうだったー!、"]
                 )
                 text += self.text_list[self.line_num].split(",")[0]
                 self.line_num += 1
@@ -220,17 +208,16 @@ class UtteranceCore(Node):
                     self.forget_type = "forth"
                 elif self.forget_type == "forth":
                     self.forget_type = "fifth"
-                
-            self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6.5)
-            while(1):
-                if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
-                    break
+
+            #time.sleep(6.5)    
+
         
         elif self.forget_type == "fifth":
+            time.sleep(1)
             if self.human_text in self.answer_list:
                 self.speaker = self.leader
                 text = random.choice(
-                    ["それそれー!、", "それだ!、", "そうだったー!"]
+                    ["それそれー!、", "それだ!、", "そうだったー!、"]
                 )
                 text += self.text_list[self.line_num].split(",")[0]
                 self.line_num += 1
@@ -250,10 +237,8 @@ class UtteranceCore(Node):
                 self.forget_type = "first"
                 self.utterance_type = self.next_pattern()
 
-            self.stop_time = Clock(clock_type=ClockType.ROS_TIME).now() + Duration(seconds=6.5)
-            while(1):
-                if Clock(clock_type=ClockType.ROS_TIME).now() > self.stop_time:
-                    break
+            #time.sleep(6.5)
+        
 
 def main(args=None):
     rclpy.init(args=args)
