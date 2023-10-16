@@ -12,5 +12,5 @@ sleep 1
 screen -AdmS dc_yellow ros2 launch cube_dc dc_promise_yellow_launch.py
 sleep 1
 # screen -AdmS toio roslaunch pokebo_cube toio.launch
-sleep 2
+# sleep 1
 screen -AdmS main ros2 launch pokebo_cube cube_promise_launch.py

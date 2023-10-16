@@ -30,9 +30,9 @@ class Cube(Node):
         self.behavior = self.create_publisher(String, f'/pokebo_cube/{cube_name}/dc/behavior', 2)
 
         #cubeの位置関係
-        blue_lookat = {'poke_green': 'left', 'poke_yellow': 'forward-left'}
-        green_lookat = {'poke_blue': 'right', 'poke_yellow': 'left'}
-        yellow_lookat = {'poke_green': 'right', 'poke_blue': 'forward-right'}
+        blue_lookat = {'poke_green': 'left', 'poke_yellow': 'forward-left', 'human': 'upper-right'}
+        green_lookat = {'poke_blue': 'right', 'poke_yellow': 'left', 'human': "up"}
+        yellow_lookat = {'poke_green': 'right', 'poke_blue': 'forward-right', 'human': 'upper-left'}
         self.lookat = {'poke_green': green_lookat, 'poke_yellow': yellow_lookat, 'poke_blue': blue_lookat}
 
         self.create_subscription(String, '/state', self.callback_state, 1)
@@ -62,27 +62,33 @@ class Cube(Node):
         data = msg.data.split(":")
         name = data[0]
         text = data[1]
-        # console.log(f"name:{name}, text:{text}")
+        flag = data[2]
+        # console.log(f"name:{name}, text:{text}, flag:{flag}")
 
         if self.name == name:
-            com = "up"
+            if flag == "forget":
+                com = self.lookat[self.name]['human']
+                console.log(f"behavior -- {com}")
+            else:
+                com = "up"
             msg = String()
             msg.data = com
             self.behavior.publish(msg)
             
             msg = String()
-            msg.data = f"{self.name}:start"
+            msg.data = f"{self.name}:start:{flag}"
             self.pub_speak.publish(msg)
             wav = self.wizavo.create_wavfile(text)
             self.wizavo.speak(wav)
             msg = String()
-            msg.data = f"{self.name}:end"
+            msg.data = f"{self.name}:end:{flag}"
             self.pub_speak.publish(msg)
     
     def callback_speak(self, msg):
         data = msg.data.split(":")
         name = data[0]
         state = data[1]
+        flag = data[2]
 
         #publishしてきたエージェントが自分自身だった場合、何もしない
         if name == self.name:
@@ -95,6 +101,8 @@ class Cube(Node):
             msg.data = com
             self.behavior.publish(msg)
         else:
+            if flag == "forget":
+                return
             com = random.choice(
                 ["nod", "nodnod", "shallow-nod"]
             )

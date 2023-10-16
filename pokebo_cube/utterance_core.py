@@ -110,7 +110,7 @@ class UtteranceCore(Node):
             text = self.text_list[self.line_num].split(",")[0]
             self.line_num += 1
             msg = String()
-            msg.data = f"{self.speaker}:{text}"
+            msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
             self.sentense.publish(msg)
             self.leader = self.speaker
             self.utterance_type = self.next_pattern()
@@ -122,7 +122,7 @@ class UtteranceCore(Node):
                 text = self.text_list[self.line_num].split(",")[0]
                 self.line_num += 1
                 msg = String()
-                msg.data = f"{self.speaker}:{text}"
+                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
                 self.sentense.publish(msg)
                 self.utterance_type = self.next_pattern()
             
@@ -132,7 +132,7 @@ class UtteranceCore(Node):
                 text = self.text_list[self.line_num].split(",")[0]
                 self.line_num += 1
                 msg = String()
-                msg.data = f"{self.speaker}:{text}"
+                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
                 self.sentense.publish(msg)
                 self.utterance_type = self.next_pattern()
             
@@ -141,7 +141,7 @@ class UtteranceCore(Node):
                 text = self.text_list[self.line_num].split(",")[0]
                 self.line_num += 1
                 msg = String()
-                msg.data = f"{self.speaker}:{text}"
+                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
                 self.sentense.publish(msg)
                 self.utterance_type = self.next_pattern()
               
@@ -151,7 +151,7 @@ class UtteranceCore(Node):
                 text = self.text_list[self.line_num].split(",")[0]
                 self.line_num += 1
                 msg = String()
-                msg.data = f"{self.speaker}:{text}"
+                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
                 self.sentense.publish(msg)
                 self.leader = self.speaker
                 self.utterance_type = self.next_pattern()
@@ -170,7 +170,7 @@ class UtteranceCore(Node):
             self.answer_list = tmp[2].split(" ")
             console.log(self.answer_list)
             msg = String()
-            msg.data = f"{self.speaker}:{text}"
+            msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
             self.sentense.publish(msg)
             self.forget_type = "second"
 
@@ -187,10 +187,12 @@ class UtteranceCore(Node):
                 text += self.text_list[self.line_num].split(",")[0]
                 self.line_num += 1
                 msg = String()
-                msg.data = f"{self.speaker}:{text}"
+                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
                 self.sentense.publish(msg)
                 self.forget_type = "first"
                 self.utterance_type = self.next_pattern()
+
+                time.sleep(3)
         
             else:
                 speaker_list = [agent for agent in self.agent_list if agent != self.speaker]
@@ -199,7 +201,7 @@ class UtteranceCore(Node):
                     ["なんだっけ?", "なんだっけ?", "うーんとー", "うーんとー", "思い出せないなあ"]
                 )
                 msg = String()
-                msg.data = f"{self.speaker}:{text}"
+                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
                 self.sentense.publish(msg)
 
                 if self.forget_type == "second":
@@ -222,17 +224,19 @@ class UtteranceCore(Node):
                 text += self.text_list[self.line_num].split(",")[0]
                 self.line_num += 1
                 msg = String()
-                msg.data = f"{self.speaker}:{text}"
+                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
                 self.sentense.publish(msg)
                 self.forget_type = "first"
                 self.utterance_type = self.next_pattern()
+
+                time.sleep(3)
         
             else:
                 self.speaker = self.leader
                 text = f"思い出した!、{self.text_list[self.line_num]}"
                 self.line_num += 1
                 msg = String()
-                msg.data = f"{self.speaker}:{text}"
+                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
                 self.sentense.publish(msg)
                 self.forget_type = "first"
                 self.utterance_type = self.next_pattern()

@@ -1,6 +1,5 @@
 # PoKeBo Cube
 - PoKeBo Cube学習システムのメインパッケージです。
-- まだpromiseしか対応していません。
 
 ## Dependencies
 - [cube_dc](https://git.icd.cs.tut.ac.jp/pokebo-cube/cube_dc)#ros2-foxy
@@ -20,4 +19,4 @@ $ colcon build
 $ source install/setup.bash
 $ sh ~/__ros2_workspace__/src/pokebo_cube/shell/cube_promise.sh
 ```
-`cube_promise.sh`はpromise用の起動スクリプトです。future, mirai用の起動スクリプトはあとで用意します。
+`cube_promise.sh`はpromise用の起動スクリプトです。future, miraiで起動したい場合はそれぞれ`cube_future.sh`, `cube_mirai.sh`を実行してください。
