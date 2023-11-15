@@ -52,8 +52,8 @@ class UtteranceCore(Node):
         text_path = text_path[1]
         with open(text_path) as f:
             self.text_list = f.readlines()
-        self.line_num = 0   #現在の行数
-        self.text_num = len(self.text_list) #テキストの行数
+        self.line_num = 0   #会話中の行数
+        self.text_num = len(self.text_list) #テキスト全体の行数
 
         #cube起動待ち
         time.sleep(3.5)
@@ -71,7 +71,7 @@ class UtteranceCore(Node):
         time.sleep(2)
     
     
-    #cubeが話し終わったタイミングで人の発話を受け取る
+    #人の発話を受け取る（常に動いている）
     def callback_input(self, msg):
         self.human_text = msg.data
         console.log(f"callback => human_text:{self.human_text}")
@@ -177,7 +177,7 @@ class UtteranceCore(Node):
             #time.sleep(8.5)
           
         
-        elif self.forget_type == "second" or self.forget_type == "third" or self.forget_type == "forth":
+        elif self.forget_type == "second" or self.forget_type == "third" or self.forget_type == "forth" or self.forget_type == "fifth":
             time.sleep(1)
             if self.human_text in self.answer_list:
                 self.speaker = self.leader
@@ -192,13 +192,16 @@ class UtteranceCore(Node):
                 self.forget_type = "first"
                 self.utterance_type = self.next_pattern()
 
-                time.sleep(3)
+                time.sleep(4)
         
             else:
+                hint = self.answer_list[0][0]
+                console.log(f"ヒント:{hint}")
                 speaker_list = [agent for agent in self.agent_list if agent != self.speaker]
                 self.speaker = random.choice(speaker_list)
+                hint_sentense = hint + "、から始まる気がするなあ"
                 text = random.choice(
-                    ["なんだっけ?", "なんだっけ?", "うーんとー", "うーんとー", "思い出せないなあ"]
+                    ["なんだっけ?", "うーんとー", "思い出せないなあ", hint_sentense]
                 )
                 msg = String()
                 msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
@@ -210,11 +213,13 @@ class UtteranceCore(Node):
                     self.forget_type = "forth"
                 elif self.forget_type == "forth":
                     self.forget_type = "fifth"
+                elif self.forget_type == "fifth":
+                    self.forget_type = "sixth"
 
             #time.sleep(6.5)    
 
         
-        elif self.forget_type == "fifth":
+        elif self.forget_type == "sixth":
             time.sleep(1)
             if self.human_text in self.answer_list:
                 self.speaker = self.leader
@@ -229,7 +234,7 @@ class UtteranceCore(Node):
                 self.forget_type = "first"
                 self.utterance_type = self.next_pattern()
 
-                time.sleep(3)
+                time.sleep(4)
         
             else:
                 self.speaker = self.leader
@@ -241,7 +246,7 @@ class UtteranceCore(Node):
                 self.forget_type = "first"
                 self.utterance_type = self.next_pattern()
 
-            #time.sleep(6.5)
+                time.sleep(4)
         
 
 def main(args=None):
