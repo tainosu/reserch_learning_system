@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# File              : cube_core.py
+# File              : utterance_core.py
 # Author            : Taichi Sekikawa <sekikawa.taichi.vf@tut.jp>
 # Date              : 2023 07/29
 # Last Modified Date: 2023 10/10
@@ -49,7 +49,7 @@ class UtteranceCore(Node):
         #テキストファイル読み込み
         filedir_path = os.environ["HOME"] + "/chi_ws/src/pokebo_cube/textfile/*"
         text_path = glob.glob(filedir_path)
-        text_path = text_path[1]
+        text_path = text_path[2]    #0:tenki, 1:aichi, 2:kanji
         with open(text_path) as f:
             self.text_list = f.readlines()
         self.line_num = 0   #会話中の行数
