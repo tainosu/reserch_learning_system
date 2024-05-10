@@ -58,6 +58,7 @@ class Cube(Node):
             msg.data = 'nod'
             self.behavior.publish(msg)
     
+    # 発話者、内容を受け取るコールバック関数
     def callback_sentense(self, msg):
         data = msg.data.split(":")
         name = data[0]
@@ -65,6 +66,7 @@ class Cube(Node):
         flag = data[2]
         # console.log(f"name:{name}, text:{text}, flag:{flag}")
 
+        # 自分が発話者だった場合
         if self.name == name:
             if flag == "forget":
                 com = self.lookat[self.name]['human']
@@ -84,6 +86,7 @@ class Cube(Node):
             msg.data = f"{self.name}:end:{flag}"
             self.pub_speak.publish(msg)
     
+    # 発話者による状態開示を受け取る
     def callback_speak(self, msg):
         data = msg.data.split(":")
         name = data[0]

@@ -1,9 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # File              : utterance_core.py
 # Author            : Taichi Sekikawa <sekikawa.taichi.vf@tut.jp>
 # Date              : 2023 07/29
-# Last Modified Date: 2023 10/10
+# Last Modified Date: 2024 05/10
 # Last Modified By  : Taichi Sekikawa <sekikawa.taichi.vf@tut.jp>
 
 #ROS2
@@ -25,10 +23,14 @@ console = Console()
 class UtteranceCore(Node):
     def __init__(self):
         super().__init__('utterance_core')
+        # 発話文を送信
         self.sentense = self.create_publisher(String, '/sentense', 1)
+        # エージェントの発話状態を送信
         self.state = self.create_publisher(String, '/state', 1)
-        self.forget_word = self.create_publisher(String, '/get_word', 1)
+        # self.forget_word = self.create_publisher(String, '/get_word', 1)
+        # 人の発話を受信
         self.create_subscription(String, "/input", self.callback_input, 1)
+
         timer_period = 4.5
         self.create_timer(timer_period, self.utterance_manager)
 
@@ -44,16 +46,17 @@ class UtteranceCore(Node):
         self.leader = self.agent1
         self.speaker = self.agent1
         self.answer_list = []
-        self.wizavo = Wizavo(wavname="shakai_4")
+        self.wizavo = Wizavo(wavname="cube")
 
         #テキストファイル読み込み
         filedir_path = os.environ["HOME"] + "/chi_ws/src/pokebo_cube/textfile/*"
         text_path = glob.glob(filedir_path)
-        text_path = text_path[2]    #0:tenki, 1:aichi, 2:kanji
+        text_path = text_path[1]    #0:tenki, 1:aichi, 2:kanji
         with open(text_path) as f:
             self.text_list = f.readlines()
         self.line_num = 0   #会話中の行数
         self.text_num = len(self.text_list) #テキスト全体の行数
+        # console.log(self.text_list)
 
         #cube起動待ち
         time.sleep(3.5)
@@ -67,6 +70,7 @@ class UtteranceCore(Node):
         msg = String()
         msg.data = 'ready'
         self.state.publish(msg)
+
         #wizavo出力待ち
         time.sleep(2)
     
@@ -108,6 +112,7 @@ class UtteranceCore(Node):
             #発話文の先頭行
             self.speaker = random.choice(self.agent_list)
             text = self.text_list[self.line_num].split(",")[0]
+            console.log(text)
             self.line_num += 1
             msg = String()
             msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
@@ -155,98 +160,97 @@ class UtteranceCore(Node):
                 self.sentense.publish(msg)
                 self.leader = self.speaker
                 self.utterance_type = self.next_pattern()
-
-                #time.sleep(6)
             
             elif self.utterance_type == "forget":
                 self.forget_mode()
     
+    # 物忘れ状態の動作
     def forget_mode(self):
-        if self.forget_type == "first":
+        forget_types = {
+            "first": self.handle_first_forget,
+            "second": self.handle_subsequent_forgets,
+            "third": self.handle_subsequent_forgets,
+            "forth": self.handle_subsequent_forgets,
+            "fifth": self.handle_subsequent_forgets,
+            "sixth": self.handle_sixth_forget
+        }
+        forget_handler = forget_types.get(self.forget_type, self.handle_first_forget)
+        forget_handler()
+
+    def handle_first_forget(self):
+        self.speaker = self.leader
+        tmp = self.text_list[self.line_num].split(",")
+        self.line_num += 1
+        text = tmp[1]
+        self.answer_list = tmp[2].split(" ")
+        console.log(self.answer_list)
+        msg = String()
+        msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
+        self.sentense.publish(msg)
+        self.forget_type = "second"
+
+    def handle_subsequent_forgets(self):
+        time.sleep(1)
+        # 人の発話が正解だった場合
+        if self.human_text in self.answer_list:
             self.speaker = self.leader
-            tmp = self.text_list[self.line_num].split(",")
+            text = random.choice(["それそれー!、", "それだ!、", "そうだったー!、"])
+            text += self.text_list[self.line_num].split(",")[0]
             self.line_num += 1
-            text = tmp[1]
-            self.answer_list = tmp[2].split(" ")
-            console.log(self.answer_list)
             msg = String()
             msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
             self.sentense.publish(msg)
-            self.forget_type = "second"
+            self.forget_type = "first"
+            self.utterance_type = self.next_pattern()
+            time.sleep(4)
+        else:
+            self.give_hint()
 
-            #time.sleep(8.5)
-          
-        
-        elif self.forget_type == "second" or self.forget_type == "third" or self.forget_type == "forth" or self.forget_type == "fifth":
-            time.sleep(1)
-            if self.human_text in self.answer_list:
-                self.speaker = self.leader
-                text = random.choice(
-                    ["それそれー!、", "それだ!、", "そうだったー!、"]
-                )
-                text += self.text_list[self.line_num].split(",")[0]
-                self.line_num += 1
-                msg = String()
-                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
-                self.sentense.publish(msg)
-                self.forget_type = "first"
-                self.utterance_type = self.next_pattern()
+    def handle_sixth_forget(self):
+        time.sleep(1)
+        # 強制的に思い出す
+        if self.human_text in self.answer_list:
+            self.speaker = self.leader
+            text = random.choice(["それそれー!、", "それだ!、", "そうだったー!、"])
+            text += self.text_list[self.line_num].split(",")[0]
+            self.line_num += 1
+            msg = String()
+            msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
+            self.sentense.publish(msg)
+            self.forget_type = "first"
+            self.utterance_type = self.next_pattern()
+            time.sleep(4)
+        else:
+            self.speaker = self.leader
+            text = f"思い出した!、{self.text_list[self.line_num]}"
+            self.line_num += 1
+            msg = String()
+            msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
+            self.sentense.publish(msg)
+            self.forget_type = "first"
+            self.utterance_type = self.next_pattern()
+            time.sleep(4)
 
-                time.sleep(4)
-        
-            else:
-                hint = self.answer_list[0][0]
-                console.log(f"ヒント:{hint}")
-                speaker_list = [agent for agent in self.agent_list if agent != self.speaker]
-                self.speaker = random.choice(speaker_list)
-                hint_sentense = hint + "、から始まる気がするなあ"
-                text = random.choice(
-                    ["なんだっけ?", "うーんとー", "思い出せないなあ", hint_sentense]
-                )
-                msg = String()
-                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
-                self.sentense.publish(msg)
+    # 答えの先頭文字をヒントとして話す
+    def give_hint(self):
+        hint = self.answer_list[0][0]
+        console.log(f"ヒント:{hint}")
+        speaker_list = [agent for agent in self.agent_list if agent != self.speaker]
+        self.speaker = random.choice(speaker_list)
+        hint_sentence = hint + "、から始まる気がするなあ"
+        text = random.choice(["なんだっけ?", "うーんとー", "思い出せないなあ", hint_sentence])
+        msg = String()
+        msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
+        self.sentense.publish(msg)
+        self.advance_forget_stage()
 
-                if self.forget_type == "second":
-                    self.forget_type = "third"
-                elif self.forget_type == "third":
-                    self.forget_type = "forth"
-                elif self.forget_type == "forth":
-                    self.forget_type = "fifth"
-                elif self.forget_type == "fifth":
-                    self.forget_type = "sixth"
+    def advance_forget_stage(self):
+        forget_stages = ["second", "third", "forth", "fifth", "sixth"]
+        current_stage = forget_stages.index(self.forget_type)
+        if current_stage < len(forget_stages) - 1:
+            self.forget_type = forget_stages[current_stage + 1]
 
-            #time.sleep(6.5)    
-
-        
-        elif self.forget_type == "sixth":
-            time.sleep(1)
-            if self.human_text in self.answer_list:
-                self.speaker = self.leader
-                text = random.choice(
-                    ["それそれー!、", "それだ!、", "そうだったー!、"]
-                )
-                text += self.text_list[self.line_num].split(",")[0]
-                self.line_num += 1
-                msg = String()
-                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
-                self.sentense.publish(msg)
-                self.forget_type = "first"
-                self.utterance_type = self.next_pattern()
-
-                time.sleep(4)
-        
-            else:
-                self.speaker = self.leader
-                text = f"思い出した!、{self.text_list[self.line_num]}"
-                self.line_num += 1
-                msg = String()
-                msg.data = f"{self.speaker}:{text}:{self.utterance_type}"
-                self.sentense.publish(msg)
-                self.forget_type = "first"
-                self.utterance_type = self.next_pattern()
-
-                time.sleep(4)
+    
         
 
 def main(args=None):

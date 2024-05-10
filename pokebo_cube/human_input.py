@@ -23,6 +23,7 @@ class HumanInput(Node):
         self.pub_input = self.create_publisher(String, "/input", 10)
         self.create_subscription(String, "/listen", self.callback_listen, 1)
     
+    # 音声認識結果を受け取るコールバック関数
     def callback_listen(self, msg):
         self.input = msg.data
         console.log(f"subscribe!---->{self.input}")
