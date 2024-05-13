@@ -20,3 +20,7 @@ $ source install/setup.bash
 $ sh ~/__ros2_workspace__/src/pokebo_cube/shell/cube_promise.sh
 ```
 `cube_promise.sh`はpromise用の起動スクリプトです。future, miraiで起動したい場合はそれぞれ`cube_future.sh`, `cube_mirai.sh`を実行してください。
+
+
+https://github.com/tainosu/reserch_learning_system/assets/73218632/d939e5c0-eee6-4b44-a09f-9cdfe3d35a15
+
